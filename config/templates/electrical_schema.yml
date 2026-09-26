@@ -8,71 +8,76 @@ name: electrical_schema
 
 folders:
   - path: "01_Montageplanung"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
+    project_manager: [view]
+    supervisor: [view]
     user: [view]
 
   - path: "01_Montageplanung/01_Grundisspläne"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
+    project_manager: [view]
+    supervisor: [view]
     user: [view]
 
   - path: "01_Montageplanung/02_Verteilerpläne"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
+    project_manager: [view]
+    supervisor: [view]
     user: [view]
 
   - path: "01_Montageplanung/03_Schemata"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
+    project_manager: [view]
+    supervisor: [view]
     user: [view]
 
   - path: "01_Montageplanung/04_Projectdaten"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
+    project_manager: [view]
+    supervisor: [view]
     user: [view]
 
   - path: "01_Montageplanung/04_Projectdaten/01_Messeprotokolle ET"
-    project_manager: [view, upload, delete]
+    project_manager: [view, upload]
     supervisor: [view, upload]
-    user: [view]
+    user: []
 
   - path: "01_Montageplanung/04_Projectdaten/02_Messeprotokolle IT"
-    project_manager: [view, upload, delete]
+    project_manager: [view, upload]
     supervisor: [view, upload]
-    user: [view]
+    user: []
 
   - path: "01_Montageplanung/04_Projectdaten/03_Datenblätter"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
-    user: [view]
+    project_manager: [view, upload]
+    supervisor: []
+    user: []
 
   - path: "01_Montageplanung/04_Projectdaten/04_Enderungbekanntgabe"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
-    user: [view]
+    project_manager: [view, upload]
+    supervisor: []
+    user: []
 
   - path: "02_Projektunterlagen"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
-    user: [view]
+    project_manager: [view]
+    supervisor: []
+    user: []
 
   - path: "02_Projektunterlagen/Ausführungunterlagen"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
-    user: [view]
+    project_manager: [view, upload]
+    supervisor: []
+    user: []
 
   - path: "02_Projektunterlagen/Ausführungunterlagen/01.06.2026 xxx"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
-    user: [view]
+    project_manager: [view, upload]
+    supervisor: []
+    user: []
 
   - path: "02_Projektunterlagen/Ausschreibungunterlagen"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
-    user: [view]
+    project_manager: [view, upload]
+    supervisor: []
+    user: []
 
   - path: "02_Projektunterlagen/Ausschreibungunterlagen/01.06.2026 xxx"
-    project_manager: [view, upload, delete]
-    supervisor: [view, upload]
-    user: [view]
+    project_manager: [view, upload]
+    supervisor: []
+    user: []
+
+  - path: "_Library"
+    project_manager: []
+    supervisor: []
+    user: []

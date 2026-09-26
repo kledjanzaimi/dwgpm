@@ -1,0 +1,48 @@
+---
+# Folder template: structure + permissions in one place.
+# Edit this file to change permissions for ALL projects using this template.
+# Adding a NEW folder here does not appear in existing projects until you run:
+#   bin/rails projects:resync[slug]      (or projects:resync_all)
+name: standard_v1
+
+library:
+  # Master library copied into each project at scaffold time (frozen per project).
+  # Set mode: link to symlink to the master instead (updates propagate; see README).
+  source: /srv/library_master
+  dest: "_Library"
+  mode: copy
+
+# DWG files live exactly 2 levels deep so relative xrefs resolve as ..\..\_Library\
+# If you change this depth, existing drawings' relative paths break. See README.
+dwg_depth: 2
+
+folders:
+  - path: "_Library"
+    project_manager: [view]
+    supervisor: [view]
+    user: [view]
+
+  - path: "00_Admin"
+    project_manager: [view, upload, delete]
+    supervisor: [view]
+    user: []
+
+  - path: "01_Incoming"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload, delete]
+    user: [view, upload]
+
+  - path: "02_Drawings"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload, delete]
+    user: [view]
+
+  - path: "02_Drawings/DWG"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload, delete]
+    user: [view, upload]
+
+  - path: "03_Output"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload, delete]
+    user: [view]

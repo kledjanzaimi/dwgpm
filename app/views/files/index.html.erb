@@ -1,0 +1,105 @@
+<% crumbs = @rel.empty? ? [] : @rel.split("/") %>
+
+<nav class="breadcrumb">
+  <%= link_to @project.name, project_files_path(@project) %>
+  <% crumbs.each_with_index do |part, i| %>
+    <span>/</span><%= link_to part, project_files_path(@project, path: crumbs[0..i].join("/")) %>
+  <% end %>
+</nav>
+
+<p class="mount-hint">
+  This folder on the network:
+  <code><%= @project.unc_path(@rel) %></code>
+</p>
+
+<table class="listing">
+  <thead>
+    <tr><th>Name</th><th>Size</th><th>Changed</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+    <% if @rel.present? %>
+      <tr><td colspan="4">
+        <%= link_to "↰ Up", project_files_path(@project, path: crumbs[0..-2].join("/")) %>
+      </td></tr>
+    <% end %>
+
+    <% @entries.each do |e| %>
+      <tr>
+        <td>
+          <% if e[:dir] %>
+            📁 <%= link_to e[:name], project_files_path(@project, path: e[:rel]) %>
+          <% else %>
+            <%= e[:dwg] ? "📐" : "📄" %> <%= e[:name] %>
+          <% end %>
+        </td>
+        <td><%= number_to_human_size(e[:size]) if e[:size] %></td>
+        <td><%= e[:mtime].strftime("%Y-%m-%d %H:%M") %></td>
+        <td class="actions">
+          <% unless e[:dir] %>
+            <% if e[:dwg] %>
+              <%# A DWG must be opened from its real position or its relative
+                  xrefs to _Library break. So: reveal the path, don't send bytes. %>
+              <button type="button" class="copy-path"
+                      data-url="<%= project_locate_files_path(@project, path: e[:rel]) %>">
+                Copy path to open
+              </button>
+            <% else %>
+              <%= link_to "Download", project_download_files_path(@project, path: e[:rel]) %>
+            <% end %>
+          <% end %>
+
+          <% if can?("delete", @project, @rel) %>
+            <%= button_to "Delete", project_file_path(@project, path: e[:rel]),
+                          method: :delete,
+                          form: { data: { turbo_confirm: "Delete #{e[:name]}?" } } %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+
+    <% if @entries.empty? %>
+      <tr><td colspan="4" class="empty">
+        Nothing here yet.
+        <%= "Upload a file to get started." if @can_upload %>
+      </td></tr>
+    <% end %>
+  </tbody>
+</table>
+
+<% if @can_upload %>
+  <section class="upload">
+    <h3>Add to this folder</h3>
+
+    <%# The glob routes need a non-empty path, so the project root has its own. %>
+    <% upload_url = @rel.present? ? project_upload_files_path(@project, path: @rel)
+                                  : project_upload_files_root_path(@project) %>
+    <% mkdir_url  = @rel.present? ? project_mkdir_files_path(@project, path: @rel)
+                                  : project_mkdir_files_root_path(@project) %>
+
+    <%= form_with url: upload_url, multipart: true do |f| %>
+      <%= f.file_field :file, required: true %>
+      <%= f.submit "Upload" %>
+    <% end %>
+
+    <%= form_with url: mkdir_url do |f| %>
+      <%= f.text_field :name, placeholder: "New folder name", required: true %>
+      <%= f.submit "Create folder" %>
+    <% end %>
+  </section>
+<% end %>
+
+<script>
+  // Fetch the UNC path and put it on the clipboard; the user pastes it into
+  // AutoCAD's Open dialog. Swap this for a custom protocol handler if you want
+  // one-click opening (see README).
+  document.querySelectorAll(".copy-path").forEach(function (btn) {
+    btn.addEventListener("click", async function () {
+      const res = await fetch(btn.dataset.url, { headers: { Accept: "application/json" } });
+      if (!res.ok) { btn.textContent = "Path unavailable"; return; }
+      const { path } = await res.json();
+      await navigator.clipboard.writeText(path);
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = "Copy path to open"; }, 1500);
+    });
+  });
+</script>

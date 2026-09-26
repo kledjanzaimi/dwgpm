@@ -1,0 +1,12 @@
+<% content_for :title, "Sign in" %>
+
+<section class="card narrow">
+  <h1>Sign in</h1>
+  <%= form_with url: login_path, class: "stack" do |f| %>
+    <%= f.label :email %>
+    <%= f.email_field :email, value: params[:email], required: true, autofocus: true, autocomplete: "username" %>
+    <%= f.label :password %>
+    <%= f.password_field :password, required: true, autocomplete: "current-password" %>
+    <%= f.submit "Sign in" %>
+  <% end %>
+</section>

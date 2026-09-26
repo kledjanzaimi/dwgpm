@@ -1,0 +1,30 @@
+<% content_for :title, "New project" %>
+
+<section class="card">
+  <h1>New project</h1>
+
+  <% if @project.errors.any? %>
+    <ul class="errors">
+      <% @project.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+    </ul>
+  <% end %>
+
+  <%= form_with model: @project, url: projects_path, class: "stack" do |f| %>
+    <%= f.label :name %>
+    <%= f.text_field :name, required: true, autofocus: true %>
+
+    <%= f.label :slug, "Slug (folder and share name)" %>
+    <%= f.text_field :slug, placeholder: "Leave blank to derive from the name", pattern: "[a-z0-9][a-z0-9-]{1,62}" %>
+
+    <%= f.label :template_name, "Folder template" %>
+    <%= f.select :template_name,
+                 Dir[FolderTemplate.dir.join("*.yml")].map { |p| File.basename(p, ".yml") }.sort %>
+
+    <%= label_tag :project_manager_id, "Project manager" %>
+    <%= select_tag :project_manager_id,
+                   options_from_collection_for_select(@project_managers, :id, :name, params[:project_manager_id]),
+                   include_blank: "None yet" %>
+
+    <%= f.submit "Create project" %>
+  <% end %>
+</section>

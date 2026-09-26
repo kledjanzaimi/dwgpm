@@ -1,0 +1,40 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      # The real project tree. Also exported read-only over SMB to workstations.
+      - ${STORAGE_ROOT_HOST}:/srv/projects
+      # The master library copied into each new project.
+      - ${LIBRARY_HOST}:/srv/library_master:ro
+      # SQLite lives here. Back this up together with the tree.
+      - ./data:/srv/data
+    expose:
+      - "3000"
+    # The boot check catches a missing mount at start; this catches the share
+    # dropping while the app is running (see WINDOWS-DEPLOY.md, step 3).
+    healthcheck:
+      test: ["CMD", "test", "-f", "/srv/projects/.dwgpm-root"]
+      interval: 30s
+      timeout: 5s
+      retries: 2
+      start_period: 30s
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    # Bound to the LAN interface only. Never publish this to a WAN address.
+    ports:
+      - "${LAN_BIND_IP}:443:443"
+    environment:
+      APP_HOST: ${APP_HOST}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  caddy_data:

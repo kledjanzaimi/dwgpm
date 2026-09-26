@@ -1,0 +1,41 @@
+<% content_for :title, "#{@project.name} · Members" %>
+
+<nav class="breadcrumb">
+  <%= link_to "Projects", projects_path %><span>/</span>
+  <%= link_to @project.name, project_files_path(@project) %><span>/</span>Members
+</nav>
+
+<table class="listing">
+  <thead>
+    <tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr>
+  </thead>
+  <tbody>
+    <% @memberships.each do |m| %>
+      <tr>
+        <td><%= m.user.name %></td>
+        <td><%= m.user.email %></td>
+        <td><%= m.role.humanize %></td>
+        <td class="actions">
+          <% if @assignable.include?(m.role) %>
+            <%= button_to "Remove", project_membership_path(@project, m), method: :delete,
+                          form: { data: { turbo_confirm: "Remove #{m.user.name} from #{@project.name}?" } } %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+    <% if @memberships.empty? %>
+      <tr><td colspan="4" class="empty">No members yet.</td></tr>
+    <% end %>
+  </tbody>
+</table>
+
+<% if @assignable.any? && @candidates.any? %>
+  <section class="upload">
+    <h3>Add a member</h3>
+    <%= form_with url: project_memberships_path(@project) do |f| %>
+      <%= f.select :user_id, options_from_collection_for_select(@candidates.order(:name), :id, :name) %>
+      <%= f.select :role, @assignable.map { |r| [r.humanize, r] } %>
+      <%= f.submit "Add" %>
+    <% end %>
+  </section>
+<% end %>

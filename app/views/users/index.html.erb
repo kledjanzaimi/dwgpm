@@ -1,0 +1,28 @@
+<% content_for :title, "Users" %>
+
+<div class="heading">
+  <h1>Users</h1>
+  <%= link_to "New user", new_user_path, class: "button" %>
+</div>
+
+<table class="listing">
+  <thead>
+    <tr><th>Name</th><th>Email</th><th>Admin</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+    <% @users.each do |user| %>
+      <tr class="<%= 'muted' unless user.active? %>">
+        <td><%= user.name %></td>
+        <td><%= user.email %></td>
+        <td><%= "Yes" if user.global_admin? %></td>
+        <td><%= user.active? ? "Active" : "Disabled #{user.disabled_at.to_date}" %></td>
+        <td class="actions">
+          <% if user.active? && user != current_user %>
+            <%= button_to "Disable", user_path(user), method: :delete,
+                          form: { data: { turbo_confirm: "Disable #{user.name}? They will no longer be able to sign in." } } %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

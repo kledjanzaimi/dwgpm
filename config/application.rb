@@ -33,7 +33,8 @@ module Dwgpm
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    # Times in the UI (activity log, file dates) use the company's zone.
+    config.time_zone = ENV.fetch("TIME_ZONE", "Europe/Berlin")
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Don't generate system test files.

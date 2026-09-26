@@ -18,6 +18,7 @@
         <nav>
           <%= link_to "Projects", projects_path %>
           <% if current_user.global_admin? %>
+            <%= link_to "Activity", activity_path %>
             <%= link_to "Templates", templates_path %>
             <%= link_to "Users", users_path %>
           <% end %>

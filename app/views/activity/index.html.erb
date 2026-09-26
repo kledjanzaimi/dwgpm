@@ -1,0 +1,82 @@
+<% content_for :title, @project ? "#{@project.name} · Activity" : "Activity" %>
+<% filtered = params.values_at(:user_id, :kind, :project_id, :q).any?(&:present?) || params[:denied] == "1" %>
+<% base_path = @project ? project_activity_path(@project) : activity_path %>
+
+<% if @project %>
+  <nav class="breadcrumb">
+    <%= link_to "Projects", projects_path %><span>/</span>
+    <%= link_to @project.name, project_files_path(@project) %><span>/</span>Activity
+  </nav>
+<% end %>
+
+<div class="heading">
+  <div>
+    <h1><%= @project ? "Project activity" : "Activity" %></h1>
+    <p class="sub">
+      <%= @project ? "Everything done in #{@project.name}, newest first." :
+                     "Everything done in every project, plus sign-ins and admin changes. Newest first." %>
+      Entries cannot be edited or removed.
+    </p>
+  </div>
+</div>
+
+<%= form_with url: base_path, method: :get, class: "filters", data: { turbo_frame: "_top" } do |f| %>
+  <% unless @project %>
+    <%= f.select :project_id, options_from_collection_for_select(@project_options, :id, :name, params[:project_id]),
+                 { include_blank: "All projects" }, aria: { label: "Project" } %>
+  <% end %>
+  <%= f.select :user_id, options_from_collection_for_select(@user_options, :id, :name, params[:user_id]),
+               { include_blank: "Everyone" }, aria: { label: "Person" } %>
+  <%= f.select :kind, @kinds.map { |k| [action_name_for(k), k] }.sort_by(&:first), { include_blank: "All actions", selected: params[:kind] },
+               aria: { label: "Action" } %>
+  <%= f.search_field :q, value: params[:q], placeholder: "Path or detail contains…", aria: { label: "Search" } %>
+  <label class="check"><%= f.check_box :denied, { checked: params[:denied] == "1" }, "1", nil %> Blocked only</label>
+  <%= f.submit "Filter", name: nil %>
+  <%= link_to "Clear", base_path, class: "clear" if filtered %>
+<% end %>
+
+<table class="listing activity">
+  <thead>
+    <tr>
+      <th>When</th><th>Who</th><th>Action</th>
+      <% unless @project %><th>Project</th><% end %>
+      <th>Path / detail</th><th>IP</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @logs.each do |log| %>
+      <tr class="<%= 'denied' unless log.allowed? %>">
+        <td class="when" title="<%= l(log.created_at, format: :long) %>">
+          <%= log.created_at.today? ? log.created_at.strftime("%H:%M") : log.created_at.strftime("%Y-%m-%d %H:%M") %>
+        </td>
+        <td><%= log.user&.name || "—" %></td>
+        <td><span class="tone tone-<%= action_tone(log) %>"><%= action_label(log) %></span></td>
+        <% unless @project %>
+          <td><%= log.project ? link_to(log.project.name, project_activity_path(log.project)) : "—" %></td>
+        <% end %>
+        <td class="what">
+          <% if log.path.present? %>
+            <code><%= log.path %></code>
+          <% end %>
+          <% if log.detail.present? %>
+            <span class="detail"><%= log.detail %></span>
+          <% end %>
+        </td>
+        <td class="ip"><%= log.ip %></td>
+      </tr>
+    <% end %>
+    <% if @logs.empty? %>
+      <tr><td colspan="<%= @project ? 5 : 6 %>" class="empty">
+        <%= filtered ? "Nothing matches these filters." : "No activity yet." %>
+      </td></tr>
+    <% end %>
+  </tbody>
+</table>
+
+<% if @more %>
+  <p class="pager">
+    <%= link_to "Older entries →",
+                "#{base_path}?#{request.query_parameters.merge('before' => @logs.last.id).to_query}",
+                class: "button secondary" %>
+  </p>
+<% end %>

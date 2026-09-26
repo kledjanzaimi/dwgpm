@@ -16,7 +16,12 @@
           <td><%= link_to project.name, project_files_path(project) %></td>
           <td><code><%= project.slug %></code></td>
           <td><%= (project.role_for(current_user) || (current_user.global_admin? ? "admin" : "")).humanize %></td>
-          <td class="actions"><%= link_to "Members", project_memberships_path(project) %></td>
+          <td class="actions">
+            <%= link_to "Members", project_memberships_path(project) %>
+            <% if current_user.global_admin? || project.role_for(current_user) == "project_manager" %>
+              <%= link_to "Activity", project_activity_path(project) %>
+            <% end %>
+          </td>
         </tr>
       <% end %>
     </tbody>

@@ -7,7 +7,12 @@ Rails.application.routes.draw do
   delete "logout", to: "sessions#destroy"
 
   root "projects#index"
-  resources :users, only: %i[index new create destroy]
+  resources :users, only: %i[index new create destroy] do
+    patch :enable, on: :member
+  end
+
+  # Audit log: everything for admins, one project for its managers.
+  get "activity", to: "activity#index"
 
   resources :templates, only: %i[index new create edit update destroy], param: :name do
     post :resync, on: :member
@@ -15,6 +20,7 @@ Rails.application.routes.draw do
 
   resources :projects, only: %i[index new create], param: :slug do
     resources :memberships, only: %i[index create destroy]
+    get "activity", to: "activity#index", as: :activity
 
     # `*path` is a glob carrying the relative path inside the project tree.
     # ORDER MATTERS: the bare `files(/*path)` glob would swallow every route

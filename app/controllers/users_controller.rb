@@ -31,6 +31,15 @@ class UsersController < ApplicationController
     redirect_to users_path, notice: "Disabled #{user.name}."
   end
 
+  # Undoes a disable. Memberships were never removed, so the user gets back
+  # exactly the project access they had before.
+  def enable
+    user = User.find(params[:id])
+    user.update!(disabled_at: nil)
+    audit!(project: nil, action: "user_enable", path: "", detail: user.email)
+    redirect_to users_path, notice: "Enabled #{user.name}."
+  end
+
   private
 
   def user_params

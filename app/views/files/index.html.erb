@@ -7,6 +7,13 @@
   <% end %>
 </nav>
 
+<% if current_user.global_admin? || @project.role_for(current_user) == "project_manager" %>
+  <p class="project-links">
+    <%= link_to "Members", project_memberships_path(@project) %>
+    <%= link_to "Activity", project_activity_path(@project) %>
+  </p>
+<% end %>
+
 <p class="mount-hint">
   This folder on the network:
   <code><%= @project.unc_path(@rel) %></code>

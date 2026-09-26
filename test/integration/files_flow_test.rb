@@ -75,6 +75,18 @@ class FilesFlowTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
+  test "downloads bypass Turbo so each one is a single request" do
+    project = make_project
+    File.write(File.join(project.root, "01_Incoming/brief.txt"), "x")
+    sign_in @user
+    get project_files_path(project, path: "01_Incoming")
+    assert_select "a[href$='/brief.txt/download'][data-turbo='false'][download]"
+
+    get project_download_files_path(project, path: "01_Incoming/brief.txt")
+    assert_response :success
+    assert_equal 1, AuditLog.where(action: "download", path: "01_Incoming/brief.txt").count
+  end
+
   test "DWGs are located by UNC path, not downloaded" do
     project = make_project
     File.write(File.join(project.root, "02_Drawings/DWG/plan.dwg"), "x")

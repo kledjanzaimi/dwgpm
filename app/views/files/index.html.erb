@@ -51,7 +51,11 @@
                 Copy path to open
               </button>
             <% else %>
-              <%= link_to "Download", project_download_files_path(@project, path: e[:rel]) %>
+              <%# A plain browser download: without turbo: false, Turbo fetches the
+                  file first, fails to render it, then the browser fetches it again
+                  (two requests, two audit entries, a stuck progress bar). %>
+              <%= link_to "Download", project_download_files_path(@project, path: e[:rel]),
+                          download: "", data: { turbo: false } %>
             <% end %>
           <% end %>
 

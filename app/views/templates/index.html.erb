@@ -1,0 +1,47 @@
+<% content_for :title, "Templates" %>
+
+<div class="heading">
+  <div>
+    <h1>Folder templates</h1>
+    <p class="sub">Each template defines a project's folders and who may view, upload and delete in them.</p>
+  </div>
+  <%= link_to "New template", new_template_path, class: "button" %>
+</div>
+
+<div class="template-grid">
+  <% @templates.each do |t| %>
+    <% used = @project_counts[t.name].to_i %>
+    <article class="template-card">
+      <header>
+        <h2><%= link_to t.name, edit_template_path(t) %></h2>
+        <span class="pill <%= 'pill-live' if used.positive? %>">
+          <%= used.positive? ? pluralize(used, "project") : "Not in use" %>
+        </span>
+      </header>
+
+      <ul class="folder-chips">
+        <% top = t.sorted_folders.map { |f| f["path"].split("/").first }.uniq %>
+        <% top.first(6).each do |name| %><li><%= name %></li><% end %>
+        <% if top.size > 6 %><li class="more">+<%= top.size - 6 %></li><% end %>
+      </ul>
+
+      <p class="meta">
+        <%= pluralize(t.folders.size, "folder rule") %>
+        <% if t.updated_at %> · changed <%= time_ago_in_words(t.updated_at) %> ago<% end %>
+      </p>
+
+      <footer>
+        <%= link_to "Edit", edit_template_path(t), class: "button" %>
+        <%= link_to "Duplicate", new_template_path(from: t.name), class: "button secondary" %>
+        <% unless used.positive? %>
+          <%= button_to "Delete", template_path(t), method: :delete, class: "danger-link",
+                        form: { data: { turbo_confirm: "Delete template #{t.name}? A copy is kept in .history." } } %>
+        <% end %>
+      </footer>
+    </article>
+  <% end %>
+</div>
+
+<% if @templates.empty? %>
+  <p class="empty">No templates yet. Create one to start adding projects.</p>
+<% end %>

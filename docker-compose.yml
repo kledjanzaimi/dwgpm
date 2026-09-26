@@ -10,6 +10,10 @@ services:
       - ${LIBRARY_HOST}:/srv/library_master:ro
       # SQLite lives here. Back this up together with the tree.
       - ./data:/srv/data
+      # Folder templates (structure + permissions). Mounted, not baked into the
+      # image: the admin Templates page writes here, and edits apply on the next
+      # request without a rebuild. Previous versions go to .history/.
+      - ./config/templates:/rails/config/templates
     expose:
       - "3000"
     # The boot check catches a missing mount at start; this catches the share

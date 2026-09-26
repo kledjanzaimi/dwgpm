@@ -1,0 +1,33 @@
+<%# One folder rule. Also rendered once with index "__INDEX__" as the blueprint
+    for rows the editor adds in the browser. The row shows its path relative to
+    the nearest listed ancestor (`parent`); the full path travels in the hidden
+    field, kept in sync by the editor. %>
+<% path = folder["path"] %>
+<% name = parent.present? ? path.delete_prefix("#{parent}/") : path %>
+<tr class="folder-row" data-existing="<%= existing %>" data-original="<%= path %>" style="--depth: <%= depth %>">
+  <td class="path-cell">
+    <div class="path">
+      <span class="twig" aria-hidden="true"></span>
+      <input type="hidden" class="path-full" name="template[folders][<%= index %>][path]" value="<%= path %>"
+             data-parent="<%= parent %>">
+      <input type="text" class="path-input" value="<%= name %>" title="<%= path %>"
+             placeholder="Folder name" aria-label="Folder name" autocomplete="off" spellcheck="false">
+      <% if library %><span class="badge" title="The drawing library is copied here">Library</span><% end %>
+    </div>
+    <p class="rename-note" hidden>Existing projects keep the old folder on disk, visible only to admins.</p>
+  </td>
+  <% TemplateFile::ROLES.each do |role| %>
+    <% TemplateFile::ACTIONS.each do |action| %>
+      <td class="cell<%= ' group-start' if action == TemplateFile::ACTIONS.first %>">
+        <input type="checkbox" name="template[folders][<%= index %>][<%= role %>][]" value="<%= action %>"
+               data-role="<%= role %>" data-grant="<%= action %>"
+               aria-label="<%= role.humanize %> can <%= action %> <%= path.presence || 'this folder' %>"
+               <%= "checked" if folder[role].include?(action) %>>
+      </td>
+    <% end %>
+  <% end %>
+  <td class="row-actions">
+    <button type="button" class="icon" data-editor="add-sub" title="Add a subfolder" aria-label="Add a subfolder">+</button>
+    <button type="button" class="icon danger" data-editor="remove" title="Remove this folder rule" aria-label="Remove">✕</button>
+  </td>
+</tr>

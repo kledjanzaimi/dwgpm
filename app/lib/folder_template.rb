@@ -6,17 +6,21 @@
 class FolderTemplate
   ROLES = %w[project_manager supervisor user].freeze
 
+  NAME_FORMAT = /\A[a-z0-9][a-z0-9_-]{1,40}\z/
+
   class NotFound < StandardError; end
 
   attr_reader :name, :config
 
+  # TEMPLATES_DIR lets tests work on a copy; Docker mounts the real folder.
   def self.dir
-    Rails.root.join("config", "templates")
+    Pathname.new(ENV.fetch("TEMPLATES_DIR") { Rails.root.join("config", "templates").to_s })
   end
 
   # Cached per template, invalidated on file mtime so edits apply without restart.
   def self.load(name)
     @cache ||= {}
+    raise NotFound, "invalid template name #{name.inspect}" unless name.to_s.match?(NAME_FORMAT)
     path = dir.join("#{name}.yml")
     raise NotFound, "no template #{name}" unless File.exist?(path)
 

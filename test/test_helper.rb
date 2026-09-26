@@ -7,10 +7,14 @@ require "fileutils"
 ENV["STORAGE_ROOT"] = Dir.mktmpdir("dwgpm-storage")
 ENV["UNC_TEMPLATE"] = '\\\\fileserver\\proj_%{slug}$'
 
+# Template editor tests write templates; give them a copy of the real ones.
+ENV["TEMPLATES_DIR"] = Dir.mktmpdir("dwgpm-templates")
+FileUtils.cp(Dir[File.expand_path("../config/templates/*.yml", __dir__)], ENV["TEMPLATES_DIR"])
+
 require_relative "../config/environment"
 require "rails/test_help"
 
-Minitest.after_run { FileUtils.rm_rf(ENV["STORAGE_ROOT"]) }
+Minitest.after_run { FileUtils.rm_rf([ENV["STORAGE_ROOT"], ENV["TEMPLATES_DIR"]]) }
 
 module ActiveSupport
   class TestCase

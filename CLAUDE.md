@@ -41,7 +41,10 @@ simplification breaks something real. **Ask before violating any of them.**
 
 9. **Permissions live in `config/templates/*.yml`, not in code or the DB.** Do
    not add per-folder permission rows. The template is the single source of
-   truth for both structure and access.
+   truth for both structure and access. The admin Templates page
+   (`TemplatesController`, `TemplateFile`) edits these YAML files directly and
+   keeps previous versions in `config/templates/.history/`; it must never
+   copy permissions into the database.
 
 10. **Roles are per-project** via `memberships`. `users.global_admin` is the one
     global role. A PM may only assign `user` / `supervisor`, only on their own

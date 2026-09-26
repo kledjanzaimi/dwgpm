@@ -66,13 +66,16 @@ manually while there are few projects.
 
 ## Permissions
 
-Edit `config/templates/standard_v1.yml`. A rule applies to its folder and
+Admins edit templates on the **Templates** page: a matrix of folders against
+View / Upload / Delete per role. It writes `config/templates/*.yml` (hand edits
+still work) and keeps each previous version in `config/templates/.history/`.
+A rule applies to its folder and
 everything beneath it, so `01_Incoming/clientX/` inherits `01_Incoming`
 automatically.
 
 - **Editing a rule** applies to all existing projects immediately.
-- **Adding a folder** needs `bin/rails projects:resync_all` to appear in
-  projects that already exist.
+- **Adding a folder** needs **Create missing folders** on the template page (or
+  `bin/rails projects:resync_all`) to appear in projects that already exist.
 
 Undefined paths grant nothing. Admin is implicitly everything, everywhere.
 

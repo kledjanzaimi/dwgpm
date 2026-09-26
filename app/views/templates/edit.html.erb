@@ -1,0 +1,253 @@
+<% content_for :title, "Template #{@template.name}" %>
+<% used = @projects.size %>
+
+<nav class="breadcrumb"><%= link_to "Templates", templates_path %><span>/</span><%= @template.name %></nav>
+
+<div class="heading">
+  <div>
+    <h1><%= @template.name %></h1>
+    <p class="sub">
+      <%= used.positive? ? "Used by #{pluralize(used, 'project')}" : "Not used by any project yet" %>
+      <% if @template.updated_at %> · last saved <%= time_ago_in_words(@template.updated_at) %> ago<% end %>
+    </p>
+  </div>
+  <% if used.positive? %>
+    <%= button_to "Create missing folders", resync_template_path(@template), class: "secondary",
+                  form: { data: { turbo_confirm: "Create any folders from this template that are missing in its #{pluralize(used, 'project')}? Nothing is deleted or moved." } } %>
+  <% end %>
+</div>
+
+<% if @template.errors.any? %>
+  <ul class="errors">
+    <% @template.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+  </ul>
+<% end %>
+
+<div class="callout">
+  <strong>How permissions work.</strong>
+  Folders people create inside a listed folder inherit its permissions. Anything not listed is hidden from
+  everyone except admins.
+  <% if used.positive? %>
+    Saving applies <%= used == 1 ? "to its project" : "to all #{used} projects" %> right away<% if used <= 5 %>
+    (<%= @projects.map(&:name).to_sentence %>)<% end %>. New folders appear in existing projects after
+    <em>Create missing folders</em>.
+  <% end %>
+</div>
+
+<%= form_with model: @template, scope: :template, url: template_path(@template), method: :patch,
+              id: "template-editor", data: { used_by: used } do |f| %>
+  <%= f.hidden_field :digest %>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Folders and permissions</h2>
+      <p class="hint">Upload and delete include view. Delete lets people remove things inside the folder.</p>
+    </div>
+
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th rowspan="2" class="path-head">Folder</th>
+            <% TemplateFile::ROLES.each do |role| %>
+              <th colspan="3" class="group"><%= role.humanize %></th>
+            <% end %>
+            <th rowspan="2"><span class="visually-hidden">Actions</span></th>
+          </tr>
+          <tr>
+            <% TemplateFile::ROLES.each do %>
+              <% TemplateFile::ACTIONS.each_with_index do |action, i| %>
+                <th class="grant<%= ' group-start' if i.zero? %>"><%= action.capitalize %></th>
+              <% end %>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody id="folder-rows">
+          <% @template.tree.each_with_index do |(folder, parent, depth), i| %>
+            <%= render "folder_row", folder: folder, parent: parent, depth: depth, index: i,
+                       existing: @template.persisted? && folder["path"].present?,
+                       library: folder["path"] == @template.library_dest %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <button type="button" class="secondary add-folder" data-editor="add-folder">+ Add folder</button>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Drawing library</h2>
+      <p class="hint">A master library of blocks and xrefs, copied into each new project.</p>
+    </div>
+
+    <div class="fields">
+      <div>
+        <label for="template_library_source">Source folder on the server</label>
+        <%= f.text_field :library_source, placeholder: "/srv/library_master", spellcheck: false %>
+      </div>
+      <div>
+        <label for="template_library_dest">Project folder it goes into</label>
+        <%= f.text_field :library_dest, list: "folder-paths", placeholder: "_Library", spellcheck: false %>
+        <datalist id="folder-paths">
+          <% @template.sorted_folders.each do |folder| %><option value="<%= folder["path"] %>"><% end %>
+        </datalist>
+      </div>
+      <div>
+        <label for="template_library_mode">Mode</label>
+        <%= f.select :library_mode, [["Copy (frozen per project)", "copy"], ["Link to master", "link"]] %>
+        <p class="hint">Link does not work over the Windows file share; use copy there.</p>
+      </div>
+    </div>
+
+    <% unless @template.dwg_depth.nil? %>
+      <p class="fixed-setting">
+        DWG depth: <strong><%= @template.dwg_depth %> levels</strong>.
+        Existing drawings' relative xrefs depend on this, so it can only be changed in the file.
+      </p>
+    <% end %>
+  </section>
+
+  <div class="savebar">
+    <span class="dirty" hidden>Unsaved changes</span>
+    <%= link_to "Cancel", edit_template_path(@template), class: "button secondary" %>
+    <%= f.submit "Save template" %>
+  </div>
+<% end %>
+
+<template id="folder-row-blueprint">
+  <%= render "folder_row", folder: TemplateFile.folder_hash("", {}), parent: "", depth: 0,
+                           index: "__INDEX__", existing: false, library: false %>
+</template>
+
+<script>
+  (() => {
+    const form = document.getElementById("template-editor");
+    if (!form || form.dataset.ready) return;
+    form.dataset.ready = "1";
+
+    const rows = form.querySelector("#folder-rows");
+    const blueprint = document.getElementById("folder-row-blueprint");
+    const dirty = form.querySelector(".dirty");
+    const usedBy = Number(form.dataset.usedBy);
+    let seq = 0;
+
+    const markDirty = () => { dirty.hidden = false; };
+    const fullOf = (row) => row.querySelector(".path-full");
+    const pathOf = (row) => fullOf(row).value;
+
+    // Each row shows its path relative to the nearest listed ancestor
+    // (data-parent); the hidden field holds the full path.
+    // A row remembers its last non-empty path so renaming a parent can carry
+    // its subfolders along, even if the name was briefly cleared.
+    function syncRow(row) {
+      const full = fullOf(row);
+      const name = row.querySelector(".path-input");
+      const parent = full.dataset.parent;
+      full.value = name.value ? (parent ? `${parent}/${name.value}` : name.value) : "";
+      name.title = full.value || (parent ? `${parent}/…` : "");
+      const parentRow = parent && [...rows.querySelectorAll(".path-full")].find((f) => f.value === parent);
+      const parentDepth = parentRow ? Number(parentRow.closest("tr").style.getPropertyValue("--depth")) : -1;
+      row.style.setProperty("--depth", parentDepth + 1);
+      const renamed = row.dataset.existing === "true" && usedBy > 0 && full.value !== row.dataset.original;
+      row.querySelector(".rename-note").hidden = !renamed;
+
+      const before = row.dataset.lastPath;
+      if (full.value && before && before !== full.value) {
+        rows.querySelectorAll(".path-full").forEach((child) => {
+          const p = child.dataset.parent;
+          if (p !== before && !p.startsWith(before + "/")) return;
+          child.dataset.parent = full.value + p.slice(before.length);
+          syncRow(child.closest("tr"));
+        });
+      }
+      if (full.value) row.dataset.lastPath = full.value;
+    }
+
+    function addRow(parent, after) {
+      const holder = document.createElement("tbody");
+      holder.innerHTML = blueprint.innerHTML.replaceAll("__INDEX__", `new${Date.now()}${seq++}`).trim();
+      const row = holder.firstElementChild;
+      fullOf(row).dataset.parent = parent;
+      syncRow(row);
+      after ? after.after(row) : rows.append(row);
+      row.querySelector(".path-input").focus();
+      markDirty();
+    }
+
+    form.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-editor]");
+      if (!button) return;
+      const row = button.closest("tr");
+
+      if (button.dataset.editor === "add-folder") addRow("", null);
+
+      if (button.dataset.editor === "add-sub") {
+        const parent = pathOf(row);
+        if (!parent) return row.querySelector(".path-input").focus();
+        let last = row; // insert after the parent's existing subfolders
+        while (last.nextElementSibling && pathOf(last.nextElementSibling).startsWith(parent + "/")) {
+          last = last.nextElementSibling;
+        }
+        addRow(parent, last);
+      }
+
+      if (button.dataset.editor === "remove") {
+        const name = row.dataset.original || pathOf(row) || "this folder";
+        if (row.dataset.existing === "true" && usedBy > 0 &&
+            !confirm(`Remove "${name}"?\n\nNothing is deleted from disk, but in ${usedBy} project(s) the folder becomes visible to admins only.`)) return;
+        // Subfolder rules stay; they now hang off this row's parent instead.
+        const gone = pathOf(row) || row.dataset.lastPath;
+        const goneName = row.querySelector(".path-input").value;
+        row.remove();
+        if (gone) {
+          rows.querySelectorAll(".path-full").forEach((child) => {
+            if (child.dataset.parent !== gone) return;
+            const childRow = child.closest("tr");
+            child.dataset.parent = fullOf(row).dataset.parent;
+            childRow.querySelector(".path-input").value = `${goneName}/${childRow.querySelector(".path-input").value}`;
+          });
+          rows.querySelectorAll("tr").forEach(syncRow);
+        }
+        markDirty();
+      }
+    });
+
+    // Upload/delete need view; removing view removes them too.
+    form.addEventListener("change", (event) => {
+      const box = event.target;
+      if (box.type === "checkbox" && box.dataset.role) {
+        const row = box.closest("tr");
+        const sibling = (grant) => row.querySelector(`input[data-role="${box.dataset.role}"][data-grant="${grant}"]`);
+        if (box.checked && box.dataset.grant !== "view") sibling("view").checked = true;
+        if (!box.checked && box.dataset.grant === "view") { sibling("upload").checked = false; sibling("delete").checked = false; }
+      }
+      markDirty();
+    });
+
+    form.addEventListener("input", (event) => {
+      const input = event.target;
+      if (input.classList.contains("path-input")) {
+        syncRow(input.closest("tr"));
+      }
+      markDirty();
+    });
+
+    form.addEventListener("submit", () => { form.dataset.submitting = "1"; });
+
+    const unsaved = () => form.isConnected && !dirty.hidden && !form.dataset.submitting;
+    const onVisit = (event) => {
+      if (!form.isConnected) return document.removeEventListener("turbo:before-visit", onVisit);
+      if (unsaved() && !confirm("Leave without saving your template changes?")) event.preventDefault();
+    };
+    const onUnload = (event) => {
+      if (!form.isConnected) return window.removeEventListener("beforeunload", onUnload);
+      if (unsaved()) event.preventDefault();
+    };
+    document.addEventListener("turbo:before-visit", onVisit);
+    window.addEventListener("beforeunload", onUnload);
+
+    rows.querySelectorAll("tr").forEach(syncRow);
+    <% if @template.errors.any? %>markDirty();<% end %>
+  })();
+</script>

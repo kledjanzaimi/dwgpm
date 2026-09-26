@@ -6,6 +6,9 @@
 # SQLite for the Docker deployment (back up with sqlite3 .backup, see WINDOWS-DEPLOY.md).
 /data/
 
+# Previous template versions written by the admin Templates page.
+/config/templates/.history/
+
 /.bundle
 /log/*
 !/log/.keep

@@ -9,6 +9,10 @@ Rails.application.routes.draw do
   root "projects#index"
   resources :users, only: %i[index new create destroy]
 
+  resources :templates, only: %i[index new create edit update destroy], param: :name do
+    post :resync, on: :member
+  end
+
   resources :projects, only: %i[index new create], param: :slug do
     resources :memberships, only: %i[index create destroy]
 

@@ -110,8 +110,11 @@ button.link { background: none; color: var(--accent); padding: 0; }
 .listing th { font-weight: 500; color: var(--muted); font-size: .85rem; }
 .listing tr:last-child td { border-bottom: 0; }
 .listing tr.muted td { color: var(--muted); }
-.listing .actions { display: flex; gap: .6rem; align-items: center; }
-.listing .actions form { margin: 0; }
+/* Stays a real table cell (no flex), so rows keep full borders even when
+   there is nothing to show. The buttons inside line up inline. */
+.listing .actions { white-space: nowrap; }
+.listing .actions > * { display: inline-block; vertical-align: middle; margin: 0 .6rem 0 0; }
+.listing .actions > :last-child { margin-right: 0; }
 .listing .actions button, .listing .actions input[type=submit] { padding: .25rem .6rem; font-size: .85rem; }
 .listing .actions form button { background: none; color: var(--danger); border: 1px solid var(--border); }
 .listing .actions .copy-path { background: none; color: var(--accent); border: 1px solid var(--border); }
@@ -124,7 +127,115 @@ button.link { background: none; color: var(--accent); padding: 0; }
 }
 .upload form { display: flex; gap: .6rem; align-items: center; margin-bottom: .6rem; flex-wrap: wrap; }
 
+/* ---- Shared bits used by the template editor ---------------------------- */
+
+.sub { color: var(--muted); margin: .25rem 0 0; }
+.hint { color: var(--muted); font-size: .85rem; margin: .25rem 0 0; }
+h2 { font-size: 1.05rem; margin: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+.button.secondary, button.secondary, input[type=submit].secondary {
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+}
+.heading form { margin: 0; }
+.danger-link { background: none; color: var(--danger); padding: .45rem .5rem; }
+
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  padding: .75rem 1rem; margin: 0 0 1.25rem;
+  border-radius: 0 6px 6px 0;
+  color: var(--muted);
+}
+.callout strong { color: var(--text); }
+
+.panel {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1.1rem 1.25rem; margin-bottom: 1.25rem;
+}
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: .9rem; }
+
+/* ---- Template list ------------------------------------------------------- */
+
+.template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.template-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1.1rem 1.25rem; display: flex; flex-direction: column; gap: .75rem;
+}
+.template-card header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+.template-card h2 a { color: var(--text); }
+.template-card .meta { color: var(--muted); font-size: .85rem; margin: 0; }
+.template-card footer { display: flex; gap: .5rem; align-items: center; margin-top: auto; }
+.template-card footer form { margin: 0 0 0 auto; }
+
+.pill { font-size: .75rem; padding: .15rem .55rem; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+.pill-live { background: var(--ok-bg); color: var(--ok-text); border-color: transparent; }
+
+.folder-chips { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
+.folder-chips li {
+  font: 12px ui-monospace, "Cascadia Mono", Consolas, monospace;
+  padding: .2rem .5rem; border-radius: 4px; background: var(--bg); border: 1px solid var(--border);
+}
+.folder-chips li.more { color: var(--muted); }
+
+/* ---- Permission matrix --------------------------------------------------- */
+
+.matrix-wrap { overflow-x: auto; margin: 0 -1.25rem; padding: 0 1.25rem; }
+.matrix { border-collapse: collapse; width: 100%; min-width: 760px; }
+.matrix th, .matrix td { padding: .4rem .5rem; border-bottom: 1px solid var(--border); }
+.matrix thead th { font-weight: 500; color: var(--muted); font-size: .8rem; text-align: center; }
+.matrix thead th.group { color: var(--text); font-size: .85rem; border-bottom: 0; }
+.matrix thead th.path-head { text-align: left; vertical-align: bottom; }
+.matrix thead th.grant { font-weight: normal; }
+.matrix .group-start { border-left: 1px solid var(--border); }
+.matrix tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+.matrix .cell { text-align: center; }
+.matrix .cell input { width: 1.05rem; height: 1.05rem; accent-color: var(--accent); cursor: pointer; }
+
+.path-cell { min-width: 200px; }
+.path { display: flex; align-items: center; gap: .4rem; padding-left: calc(var(--depth, 0) * 1.4rem); }
+.path .twig { width: .8rem; height: .8rem; flex: none; border: 1px solid var(--border); border-width: 0 0 1px 1px; border-radius: 0 0 0 3px; transform: translateY(-.25rem); visibility: hidden; }
+.folder-row:not([style*="--depth: 0"]) .twig { visibility: visible; }
+.path-input {
+  flex: 1; min-width: 0;
+  font: 13px ui-monospace, "Cascadia Mono", Consolas, monospace !important;
+  background: transparent !important; border-color: transparent !important;
+}
+.path-input:hover, .path-input:focus { border-color: var(--border) !important; background: var(--bg) !important; }
+.path-input:placeholder-shown { border-color: var(--border) !important; }
+
+.badge { font-size: .7rem; padding: .1rem .45rem; border-radius: 4px; background: var(--accent); color: var(--accent-text); }
+.rename-note { margin: .2rem 0 0 calc(var(--depth, 0) * 1.4rem + 1.2rem); font-size: .8rem; color: var(--danger); }
+
+.row-actions { white-space: nowrap; text-align: right; }
+button.icon {
+  background: none; color: var(--muted); border: 1px solid transparent;
+  padding: .2rem .45rem; font-size: .8rem; border-radius: 4px;
+}
+button.icon:hover { border-color: var(--border); color: var(--text); }
+button.icon.danger:hover { color: var(--danger); }
+.add-folder { margin-top: .9rem; }
+
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.fields label { display: block; font-weight: 500; margin-bottom: .3rem; }
+.fields input, .fields select { width: 100%; }
+.fixed-setting { margin: 1rem 0 0; padding-top: .9rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+.fixed-setting strong { color: var(--text); }
+
+.savebar {
+  position: sticky; bottom: 0; z-index: 1;
+  display: flex; justify-content: flex-end; align-items: center; gap: .6rem;
+  padding: .8rem 1.25rem; margin: 0 -1.5rem;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid var(--border);
+}
+.savebar .dirty { margin-right: auto; color: var(--muted); font-size: .9rem; }
+.savebar .dirty::before { content: "●"; color: #d99a00; margin-right: .4rem; }
+
 @media (max-width: 640px) {
+  .savebar { margin: 0 -1rem; padding: .8rem 1rem; }
   main { padding: 1rem; }
   .topbar { padding: .75rem 1rem; flex-wrap: wrap; }
   .listing { display: block; overflow-x: auto; }

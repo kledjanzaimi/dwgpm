@@ -1,0 +1,19 @@
+<% content_for :title, "New template" %>
+
+<nav class="breadcrumb"><%= link_to "Templates", templates_path %><span>/</span>New</nav>
+
+<section class="card">
+  <h1>New template</h1>
+
+  <%= form_with url: templates_path, class: "stack" do |f| %>
+    <%= f.label :name, "Name" %>
+    <%= f.text_field :name, value: @name, required: true, autofocus: true,
+                     pattern: "[a-z0-9][a-z0-9_\\-]{1,40}", placeholder: "e.g. civil_v1" %>
+    <p class="hint">Lowercase letters, numbers, dashes and underscores. It cannot be renamed later, because projects refer to it by name.</p>
+
+    <%= f.label :from, "Start from" %>
+    <%= f.select :from, options_for_select([["Blank template", ""]] + @sources.map { |s| ["Copy of #{s}", s] }, params[:from]) %>
+
+    <%= f.submit "Create and edit" %>
+  <% end %>
+</section>

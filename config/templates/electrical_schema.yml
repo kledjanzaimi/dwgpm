@@ -1,0 +1,78 @@
+---
+# Folder template: structure + permissions in one place.
+# Managed from the admin UI (Templates); hand edits work too. Each saved
+# version is kept in config/templates/.history/.
+# New folders reach existing projects only after "Create missing folders"
+# in the UI, or: bin/rails projects:resync_all
+name: electrical_schema
+
+folders:
+  - path: "01_Montageplanung"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "01_Montageplanung/01_Grundisspläne"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "01_Montageplanung/02_Verteilerpläne"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "01_Montageplanung/03_Schemata"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "01_Montageplanung/04_Projectdaten"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "01_Montageplanung/04_Projectdaten/01_Messeprotokolle ET"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "01_Montageplanung/04_Projectdaten/02_Messeprotokolle IT"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "01_Montageplanung/04_Projectdaten/03_Datenblätter"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "01_Montageplanung/04_Projectdaten/04_Enderungbekanntgabe"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "02_Projektunterlagen"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "02_Projektunterlagen/Ausführungunterlagen"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "02_Projektunterlagen/Ausführungunterlagen/01.06.2026 xxx"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "02_Projektunterlagen/Ausschreibungunterlagen"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
+
+  - path: "02_Projektunterlagen/Ausschreibungunterlagen/01.06.2026 xxx"
+    project_manager: [view, upload, delete]
+    supervisor: [view, upload]
+    user: [view]
